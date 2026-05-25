@@ -1,0 +1,100 @@
+.synq-panel-icon {
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+.synq-popup {
+    padding: 12px;
+    min-width: 320px;
+    max-width: 420px;
+}
+
+.synq-tabs {
+    spacing: 4px;
+    margin-bottom: 10px;
+}
+
+.synq-tab {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.synq-tab:hover {
+    background-color: rgba(255,255,255,0.14);
+    color: white;
+}
+
+.synq-tab-active {
+    background-color: rgba(255,255,255,0.22);
+    color: white;
+    font-weight: bold;
+}
+
+.synq-app-row {
+    spacing: 8px;
+    padding: 4px 0;
+    align-items: center;
+}
+
+.synq-app-name {
+    min-width: 130px;
+    font-size: 13px;
+    color: white;
+}
+
+.synq-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: rgba(120, 180, 255, 0.75);
+}
+
+.synq-app-time {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    min-width: 60px;
+    text-align: right;
+}
+
+.synq-page-row {
+    spacing: 4px;
+    padding: 2px 0 2px 12px;
+    align-items: center;
+}
+
+.synq-page-indent {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+}
+
+.synq-page-name {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    min-width: 130px;
+}
+
+.synq-page-time {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+}
+
+.synq-sep {
+    height: 1px;
+    background-color: rgba(255,255,255,0.12);
+    margin: 8px 0;
+}
+
+.synq-stat {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    padding: 2px 0;
+}
+
+.synq-empty {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    padding: 8px 0;
+}
