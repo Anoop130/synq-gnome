@@ -292,7 +292,7 @@ class SynqIndicator extends PanelMenu.Button {
     // input:  none
     // output: none
     _buildSkeleton() {
-        // header: title left, hero total time centre, range name right
+        // header: title left, hero total time right
         const headerItem = new PopupMenu.PopupBaseMenuItem({
             reactive: false,
             style_class: 'synq-header-item'
@@ -315,15 +315,8 @@ class SynqIndicator extends PanelMenu.Button {
             y_align: Clutter.ActorAlign.CENTER,
             x_expand: false
         });
-        this._heroRangeLabel = new St.Label({
-            text: 'today',
-            style_class: 'synq-hero-range',
-            y_align: Clutter.ActorAlign.END,
-            x_expand: false
-        });
         headerBox.add_child(headerTitle);
         headerBox.add_child(this._heroLabel);
-        headerBox.add_child(this._heroRangeLabel);
         headerItem.add_child(headerBox);
         this.menu.addMenuItem(headerItem);
 
@@ -456,8 +449,6 @@ class SynqIndicator extends PanelMenu.Button {
         for (const a of stats.apps) total += a.secs;
 
         this._heroLabel.set_text(total > 0 ? fmtDuration(total) : '0m');
-        const rangeNames = { today: 'today', week: 'this week', month: 'this month' };
-        this._heroRangeLabel.set_text(rangeNames[this._range] || this._range);
 
         this._heatmapBox.destroy_all_children();
         this._buildHeatmap(events);
@@ -780,6 +771,12 @@ class SynqIndicator extends PanelMenu.Button {
 // ---- main extension class ----
 
 export default class SynqExtension extends Extension {
+    // input:  metadata (object) extension metadata from metadata.json
+    // output: none
+    constructor(metadata) {
+        super(metadata);
+    }
+
     enable() {
         this._events = [];
         this._currentTitle = '';
@@ -793,7 +790,9 @@ export default class SynqExtension extends Extension {
         this._locked = false;
         this._asleep = false;
         this._paused = false;
-        this._settings = this.getSettings();
+        this._settings = this.getSettings(
+            'org.gnome.shell.extensions.synq-gnome'
+        );
         this._refreshConn = 0;
 
         GLib.mkdir_with_parents(DATA_DIR, 0o755);
