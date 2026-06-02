@@ -1,0 +1,259 @@
+/*
+ * synq panel popup styles.
+ *
+ * popup structure (menu-box, range pill, chart-row with fixed-width bar track
+ * and a child filled bar, the colour-cycled bars across the top rows)
+ * is adapted from WakaPanel: https://github.com/Anoop130/wakapanel
+ *
+ * track and bar pixel sizes live inline in extension.js; this file only sets
+ * colour and typography. Clutter can collapse zero-sized CSS-only widgets, so
+ * size lives where layout code can guarantee it.
+ */
+
+/* panel button */
+
+.synq-panel-icon {
+    padding: 0 2px;
+}
+
+.synq-panel-label {
+    margin-left: 4px;
+    font-weight: 500;
+}
+
+/* popup container */
+
+.synq-menu-box {
+    min-width: 480px;
+    max-width: 480px;
+    padding: 4px 0;
+    background-color: #1e1e2e;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* header */
+
+.synq-header-item {
+    padding: 12px 14px 10px 14px;
+}
+
+.synq-header-box {
+    spacing: 0;
+}
+
+.synq-header-title {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.02em;
+}
+
+.synq-hero-time {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: rgba(100, 180, 255, 0.95);
+    letter-spacing: -0.01em;
+}
+
+.synq-hero-range {
+    font-size: 0.72em;
+    color: rgba(255, 255, 255, 0.38);
+    text-align: right;
+}
+
+/* range pill */
+
+.synq-range-item {
+    padding: 6px 12px 4px 12px;
+}
+
+.synq-range-box {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 3px;
+    spacing: 3px;
+}
+
+.synq-range-button {
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    background-color: transparent;
+    border: none;
+    transition-duration: 150ms;
+}
+
+.synq-range-button:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.synq-range-button-active {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+/* hourly heatmap */
+
+.synq-heatmap-item {
+    padding: 4px 14px 6px 14px;
+}
+
+.synq-heatmap-row {
+    spacing: 2px;
+}
+
+.synq-heatmap-cell {
+    border-radius: 3px;
+    width: 17px;
+    height: 12px;
+}
+
+.synq-heat-0      { background-color: rgba(255, 255, 255, 0.06); }
+.synq-heat-1      { background-color: rgba(100, 180, 255, 0.25); }
+.synq-heat-2      { background-color: rgba(100, 180, 255, 0.55); }
+.synq-heat-3      { background-color: rgba(100, 180, 255, 0.80); }
+.synq-heat-4      { background-color: rgba(100, 180, 255, 1.00); }
+.synq-heat-future { background-color: rgba(255, 255, 255, 0.04); }
+
+.synq-heatmap-axis-row {
+    spacing: 0;
+}
+
+.synq-heatmap-axis {
+    font-size: 0.63em;
+    color: rgba(255, 255, 255, 0.28);
+}
+
+/* app list */
+
+.synq-app-item {
+    padding: 4px 12px;
+}
+
+.synq-app-box {
+    spacing: 4px;
+}
+
+.synq-app-row {
+    spacing: 8px;
+    padding: 4px 4px;
+    border-radius: 4px;
+}
+
+.synq-app-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.synq-app-name {
+    min-width: 155px;
+    max-width: 155px;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.synq-app-time {
+    min-width: 52px;
+    font-size: 0.82em;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: right;
+}
+
+.synq-app-pct {
+    min-width: 34px;
+    font-size: 0.73em;
+    color: rgba(255, 255, 255, 0.28);
+    text-align: right;
+}
+
+.synq-chevron {
+    font-size: 0.82em;
+    color: rgba(255, 255, 255, 0.35);
+    min-width: 10px;
+}
+
+/* activity sub-rows */
+
+.synq-activity-row {
+    spacing: 6px;
+    padding: 2px 4px 2px 18px;
+}
+
+.synq-activity-bullet {
+    min-width: 8px;
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.30);
+}
+
+.synq-activity-name {
+    min-width: 135px;
+    max-width: 135px;
+    font-size: 0.82em;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.synq-activity-time {
+    min-width: 50px;
+    font-size: 0.78em;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: right;
+}
+
+.synq-activity-bar {
+    opacity: 0.75;
+}
+
+/* bar colour cycle */
+
+.synq-bar-0 { background-color: rgba(100, 180, 255, 0.90); }
+.synq-bar-1 { background-color: rgba(100, 220, 140, 0.90); }
+.synq-bar-2 { background-color: rgba(255, 200,  70, 0.90); }
+.synq-bar-3 { background-color: rgba(255, 120,  90, 0.90); }
+.synq-bar-4 { background-color: rgba(190, 110, 255, 0.90); }
+
+/* insight cards */
+
+.synq-stats-item {
+    padding: 6px 12px 8px 12px;
+}
+
+.synq-stats-box {
+    spacing: 8px;
+}
+
+.synq-insight-card {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 10px;
+    spacing: 2px;
+}
+
+.synq-insight-label {
+    font-size: 0.62em;
+    color: rgba(255, 255, 255, 0.38);
+    letter-spacing: 0.06em;
+}
+
+.synq-insight-value {
+    font-size: 0.95em;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.90);
+}
+
+.synq-insight-sub {
+    font-size: 0.68em;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* empty state */
+
+.synq-empty {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.40);
+    font-style: italic;
+    padding: 8px 0;
+}

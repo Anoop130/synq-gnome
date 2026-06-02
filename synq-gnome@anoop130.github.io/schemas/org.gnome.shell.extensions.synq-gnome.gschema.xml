@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.synq-gnome"
+          path="/org/gnome/shell/extensions/synq-gnome/">
+    <key name="pause-on-suspend" type="b">
+      <default>true</default>
+      <summary>Pause on suspend</summary>
+      <description>Stop counting the focused window while the system is suspended or the lid is closed.</description>
+    </key>
+    <key name="pause-on-lock" type="b">
+      <default>true</default>
+      <summary>Pause on screen lock</summary>
+      <description>Stop counting the focused window while the screen is locked.</description>
+    </key>
+    <key name="prune-days" type="i">
+      <default>31</default>
+      <range min="1" max="365"/>
+      <summary>Data retention in days</summary>
+      <description>Events older than this are deleted on startup.</description>
+    </key>
+    <key name="panel-refresh-secs" type="i">
+      <default>60</default>
+      <range min="5" max="3600"/>
+      <summary>Panel refresh interval in seconds</summary>
+      <description>How often the panel total is recomputed.</description>
+    </key>
+  </schema>
+</schemalist>
