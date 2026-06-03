@@ -47,19 +47,19 @@ Expand an application row to see nested tab or project time.
 2. Compile the settings schema:
 
    ```bash
-   glib-compile-schemas synq-gnome@anoop130.github.io/schemas/
+   glib-compile-schemas synq-gnome@rsim/schemas/
    ```
 
 3. Copy the extension to the GNOME extensions directory:
 
    ```bash
-   cp -r synq-gnome@anoop130.github.io ~/.local/share/gnome-shell/extensions/
+   cp -r synq-gnome@rsim ~/.local/share/gnome-shell/extensions/
    ```
 
 4. Enable the extension:
 
    ```bash
-   gnome-extensions enable synq-gnome@anoop130.github.io
+   gnome-extensions enable synq-gnome@rsim
    ```
 
 5. Restart GNOME Shell:
@@ -68,19 +68,19 @@ Expand an application row to see nested tab or project time.
 
 ### From ZIP File
 
-1. Download the latest `synq-gnome@anoop130.github.io.shell-extension.zip` from [Releases](https://github.com/Anoop130/synq-gnome/releases)
+1. Download the latest `synq-gnome@rsim.shell-extension.zip` from [Releases](https://github.com/Anoop130/synq-gnome/releases)
 2. Install and enable:
 
    ```bash
-   gnome-extensions install synq-gnome@anoop130.github.io.shell-extension.zip
-   gnome-extensions enable synq-gnome@anoop130.github.io
+   gnome-extensions install synq-gnome@rsim.shell-extension.zip
+   gnome-extensions enable synq-gnome@rsim
    ```
 
 ## Configuration
 
 1. Open extension settings:
    - Right-click the Synq icon in the top bar, then open preferences if available
-   - Or run: `gnome-extensions prefs synq-gnome@anoop130.github.io`
+   - Or run: `gnome-extensions prefs synq-gnome@rsim`
 
 2. Adjust tracking behavior (optional):
 
@@ -113,8 +113,8 @@ To preview the UI without waiting for real usage:
 
 ```bash
 python3 scripts/generate-demo-events.py
-gnome-extensions disable synq-gnome@anoop130.github.io
-gnome-extensions enable synq-gnome@anoop130.github.io
+gnome-extensions disable synq-gnome@rsim
+gnome-extensions enable synq-gnome@rsim
 ```
 
 ## Requirements
@@ -143,11 +143,11 @@ When tracking pauses, the title `__IDLE__` is emitted so subscribers can exclude
 git clone https://github.com/Anoop130/synq-gnome.git
 cd synq-gnome
 
-ln -s $(pwd)/synq-gnome@anoop130.github.io \
-  ~/.local/share/gnome-shell/extensions/synq-gnome@anoop130.github.io
+ln -s $(pwd)/synq-gnome@rsim \
+  ~/.local/share/gnome-shell/extensions/synq-gnome@rsim
 
-glib-compile-schemas synq-gnome@anoop130.github.io/schemas/
-gnome-extensions enable synq-gnome@anoop130.github.io
+glib-compile-schemas synq-gnome@rsim/schemas/
+gnome-extensions enable synq-gnome@rsim
 ```
 
 ### Making Changes
@@ -155,12 +155,12 @@ gnome-extensions enable synq-gnome@anoop130.github.io
 After editing code:
 
 ```bash
-gnome-extensions disable synq-gnome@anoop130.github.io
+gnome-extensions disable synq-gnome@rsim
 
 # Recompile schemas only if schemas/*.xml changed
-glib-compile-schemas ~/.local/share/gnome-shell/extensions/synq-gnome@anoop130.github.io/schemas/
+glib-compile-schemas ~/.local/share/gnome-shell/extensions/synq-gnome@rsim/schemas/
 
-gnome-extensions enable synq-gnome@anoop130.github.io
+gnome-extensions enable synq-gnome@rsim
 ```
 
 Restart GNOME Shell (X11: `Alt+F2` then `r`; Wayland: log out and back in).
@@ -175,7 +175,7 @@ journalctl -f -o cat /usr/bin/gnome-shell | grep -i synq
 
 ### Extension not showing
 
-- Confirm the extension is enabled: `gnome-extensions enable synq-gnome@anoop130.github.io`
+- Confirm the extension is enabled: `gnome-extensions enable synq-gnome@rsim`
 - Check logs: `journalctl -f -o cat /usr/bin/gnome-shell | grep -i synq`
 
 ### Panel shows no time
@@ -188,7 +188,7 @@ journalctl -f -o cat /usr/bin/gnome-shell | grep -i synq
 - Recompile schemas:
 
   ```bash
-  glib-compile-schemas ~/.local/share/gnome-shell/extensions/synq-gnome@anoop130.github.io/schemas/
+  glib-compile-schemas ~/.local/share/gnome-shell/extensions/synq-gnome@rsim/schemas/
   ```
 
 - Disable and re-enable the extension, then restart GNOME Shell

@@ -1,0 +1,9 @@
+{
+  "name": "Synq",
+  "description": "Track app and window usage in the panel. DBus API for Synq collectors.",
+  "uuid": "synq-gnome@rsim",
+  "shell-version": ["45", "46", "47", "48"],
+  "settings-schema": "org.gnome.shell.extensions.synq-gnome",
+  "version": 1,
+  "url": "https://github.com/Anoop130/synq-gnome"
+}

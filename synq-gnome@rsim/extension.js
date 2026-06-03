@@ -237,7 +237,10 @@ class SynqDBusImpl extends GObject.Object {
     }
 
     unexport() {
-        this._dbusImpl.unexport();
+        if (this._dbusImpl) {
+            this._dbusImpl.unexport();
+            this._dbusImpl = null;
+        }
     }
 });
 
@@ -281,9 +284,17 @@ class SynqIndicator extends PanelMenu.Button {
         this._buildSkeleton();
         this._updatePanelLabel();
 
-        this.menu.connect('open-state-changed', (m, open) => {
+        this._menuOpenHandlerId = this.menu.connect('open-state-changed', (m, open) => {
             if (open) this._render();
         });
+    }
+
+    destroy() {
+        if (this._menuOpenHandlerId) {
+            this.menu.disconnect(this._menuOpenHandlerId);
+            this._menuOpenHandlerId = 0;
+        }
+        super.destroy();
     }
 
     // builds the static menu skeleton (header with hero time, range pill,
@@ -796,8 +807,11 @@ export default class SynqExtension extends Extension {
         this._refreshConn = 0;
 
         GLib.mkdir_with_parents(DATA_DIR, 0o755);
-        this._loadEvents();
-        this._pruneOldEvents();
+        this._loadEvents(() => {
+            this._pruneOldEvents();
+            if (this._indicator)
+                this._indicator._updatePanelLabel();
+        });
 
         this._indicator = new SynqIndicator(this);
         Main.panel.addToStatusArea('synq', this._indicator);
@@ -1006,20 +1020,32 @@ export default class SynqExtension extends Extension {
     }
 
     // loads all events from the JSONL file into memory on startup.
-    // input:  none
+    // input:  onDone (function|undefined) called when load finishes or file missing
     // output: none (populates this._events)
-    _loadEvents() {
-        try {
-            const [ok, bytes] = GLib.file_get_contents(DATA_FILE);
-            if (!ok) return;
-            const text = new TextDecoder().decode(bytes);
-            this._events = text.trim().split('\n')
-                .filter(l => l.trim())
-                .map(l => { try { return JSON.parse(l); } catch { return null; } })
-                .filter(Boolean);
-        } catch (_) {
+    _loadEvents(onDone) {
+        const done = () => {
+            if (typeof onDone === 'function')
+                onDone();
+        };
+        const file = Gio.File.new_for_path(DATA_FILE);
+        if (!file.query_exists(null)) {
             this._events = [];
+            done();
+            return;
         }
+        file.load_contents_async(GLib.PRIORITY_DEFAULT, null, (f, res) => {
+            try {
+                const [, bytes] = f.load_contents_finish(res);
+                const text = new TextDecoder().decode(bytes);
+                this._events = text.trim().split('\n')
+                    .filter(l => l.trim())
+                    .map(l => { try { return JSON.parse(l); } catch { return null; } })
+                    .filter(Boolean);
+            } catch (_) {
+                this._events = [];
+            }
+            done();
+        });
     }
 
     // removes events older than the prune-days setting from the in-memory log and rewrites
