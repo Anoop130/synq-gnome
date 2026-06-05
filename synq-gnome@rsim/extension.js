@@ -8,8 +8,8 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-const DBUS_NAME = 'io.github.Synq.GnomeExtension';
-const DBUS_PATH = '/io/github/Synq/GnomeExtension';
+const DBUS_NAME = 'org.gnome.Shell.Extensions.SynqGnome';
+const DBUS_PATH = '/org/gnome/Shell/Extensions/SynqGnome';
 const DATA_DIR  = GLib.get_home_dir() + '/.local/share/synq-gnome';
 const DATA_FILE = DATA_DIR + '/events.jsonl';
 // sentinel title written when recording pauses (suspend, lid-close, or lock).
@@ -197,52 +197,6 @@ function computeStats(events) {
     return { apps, switches, avgGapMin, distracting, peakBlock, peakSecs };
 }
 
-// ---- DBus implementation object ----
-
-const SynqDBusImpl = GObject.registerClass(
-class SynqDBusImpl extends GObject.Object {
-    _init(getEventsFn, getCurrentTitleFn) {
-        super._init();
-        this._getEvents = getEventsFn;
-        this._getCurrentTitle = getCurrentTitleFn;
-        this._dbusImpl = Gio.DBusExportedObject.wrapJSObject(DBUS_IFACE, this);
-    }
-
-    // DBus method: returns all events since since_unix as a JSON string.
-    // input:  since_unix (int64) unix timestamp lower bound
-    // output: string, JSON array of {title, ts} objects
-    GetEvents(since_unix) {
-        const events = this._getEvents(since_unix);
-        return JSON.stringify(events);
-    }
-
-    // DBus method: returns the title of the currently focused window.
-    // input:  none
-    // output: string, window title or empty string
-    GetCurrentWindow() {
-        return this._getCurrentTitle() || '';
-    }
-
-    // emits the WindowChanged signal on the DBus connection.
-    // input:  title (string) new window title
-    //         timestamp (string) ISO 8601 datetime
-    // output: none
-    emitWindowChanged(title, timestamp) {
-        this._dbusImpl.emit_signal('WindowChanged',
-            new GLib.Variant('(ss)', [title, timestamp]));
-    }
-
-    export(connection) {
-        this._dbusImpl.export(connection, DBUS_PATH);
-    }
-
-    unexport() {
-        if (this._dbusImpl) {
-            this._dbusImpl.unexport();
-            this._dbusImpl = null;
-        }
-    }
-});
 
 // ---- indicator (panel button + popup) ----
 //
@@ -284,16 +238,13 @@ class SynqIndicator extends PanelMenu.Button {
         this._buildSkeleton();
         this._updatePanelLabel();
 
-        this._menuOpenHandlerId = this.menu.connect('open-state-changed', (m, open) => {
+        this.menu.connectObject('open-state-changed', (m, open) => {
             if (open) this._render();
-        });
+        }, this);
     }
 
     destroy() {
-        if (this._menuOpenHandlerId) {
-            this.menu.disconnect(this._menuOpenHandlerId);
-            this._menuOpenHandlerId = 0;
-        }
+        this.menu.disconnectObject(this);
         super.destroy();
     }
 
@@ -354,11 +305,11 @@ class SynqIndicator extends PanelMenu.Button {
                 style_class: 'synq-range-button',
                 x_expand: true
             });
-            btn.connect('clicked', () => {
+            btn.connectObject('clicked', () => {
                 this._range = r.key;
                 this._updateRangeButtons();
                 this._render();
-            });
+            }, this);
             this._rangeButtons[r.key] = btn;
             rangeBox.add_child(btn);
         }
@@ -417,7 +368,7 @@ class SynqIndicator extends PanelMenu.Button {
         this._exportButton = new PopupMenu.PopupImageMenuItem(
             'Export CSV', 'document-save-symbolic'
         );
-        this._exportButton.connect('activate', () => this._exportCSV());
+        this._exportButton.connectObject('activate', () => this._exportCSV(), this);
         this.menu.addMenuItem(this._exportButton);
     }
 
@@ -616,11 +567,11 @@ class SynqIndicator extends PanelMenu.Button {
                     y_align: Clutter.ActorAlign.CENTER
                 });
                 row.add_child(chevron);
-                row.connect('button-press-event', () => {
+                row.connectObject('button-press-event', () => {
                     if (this._expanded.has(a.app)) this._expanded.delete(a.app);
                     else this._expanded.add(a.app);
                     this._render();
-                });
+                }, this);
             }
 
             this._appBox.add_child(row);
@@ -792,11 +743,9 @@ export default class SynqExtension extends Extension {
         this._events = [];
         this._currentTitle = '';
         this._nameId = 0;
-        this._dbusImpl = null;
-        this._titleConn = null;
+        this._dbusExport = null;
         this._trackedWindow = null;
         this._panelTimerId = 0;
-        this._lockConn = null;
         this._sleepSubId = 0;
         this._locked = false;
         this._asleep = false;
@@ -804,7 +753,6 @@ export default class SynqExtension extends Extension {
         this._settings = this.getSettings(
             'org.gnome.shell.extensions.synq-gnome'
         );
-        this._refreshConn = 0;
 
         GLib.mkdir_with_parents(DATA_DIR, 0o755);
         this._loadEvents(() => {
@@ -816,17 +764,17 @@ export default class SynqExtension extends Extension {
         this._indicator = new SynqIndicator(this);
         Main.panel.addToStatusArea('synq', this._indicator);
 
-        this._focusConn = global.display.connect(
-            'notify::focus-window',
-            this._onFocusChanged.bind(this)
+        global.display.connectObject(
+            'notify::focus-window', this._onFocusChanged.bind(this),
+            this
         );
 
         if (Main.screenShield) {
             this._locked = Main.screenShield.locked;
-            this._lockConn = Main.screenShield.connect('locked-changed', () => {
+            Main.screenShield.connectObject('locked-changed', () => {
                 this._locked = Main.screenShield.locked;
                 this._updatePauseState();
-            });
+            }, this);
         }
 
         // subscribe to logind PrepareForSleep on the system bus. it fires with
@@ -850,9 +798,9 @@ export default class SynqExtension extends Extension {
         this._onFocusChanged();
 
         this._startPanelTimer();
-        this._refreshConn = this._settings.connect(
-            'changed::panel-refresh-secs',
-            () => this._startPanelTimer()
+        this._settings.connectObject(
+            'changed::panel-refresh-secs', () => this._startPanelTimer(),
+            this
         );
     }
 
@@ -866,35 +814,28 @@ export default class SynqExtension extends Extension {
             GLib.source_remove(this._panelTimerId);
             this._panelTimerId = 0;
         }
-        if (this._titleConn && this._trackedWindow) {
-            this._trackedWindow.disconnect(this._titleConn);
-            this._titleConn = null;
+        if (this._trackedWindow) {
+            this._trackedWindow.disconnectObject(this);
             this._trackedWindow = null;
         }
-        if (this._lockConn && Main.screenShield) {
-            Main.screenShield.disconnect(this._lockConn);
-            this._lockConn = null;
-        }
+        if (Main.screenShield)
+            Main.screenShield.disconnectObject(this);
         if (this._sleepSubId) {
             Gio.DBus.system.signal_unsubscribe(this._sleepSubId);
             this._sleepSubId = 0;
         }
-        if (this._refreshConn && this._settings) {
-            this._settings.disconnect(this._refreshConn);
-            this._refreshConn = 0;
+        if (this._settings) {
+            this._settings.disconnectObject(this);
+            this._settings = null;
         }
-        this._settings = null;
-        if (this._focusConn) {
-            global.display.disconnect(this._focusConn);
-            this._focusConn = null;
-        }
+        global.display.disconnectObject(this);
         if (this._indicator) {
             this._indicator.destroy();
             this._indicator = null;
         }
-        if (this._dbusImpl) {
-            this._dbusImpl.unexport();
-            this._dbusImpl = null;
+        if (this._dbusExport) {
+            this._dbusExport.unexport();
+            this._dbusExport = null;
         }
         if (this._nameId) {
             Gio.bus_unown_name(this._nameId);
@@ -912,9 +853,8 @@ export default class SynqExtension extends Extension {
     _onFocusChanged() {
         if (this._paused) return;
 
-        if (this._titleConn && this._trackedWindow) {
-            this._trackedWindow.disconnect(this._titleConn);
-            this._titleConn = null;
+        if (this._trackedWindow) {
+            this._trackedWindow.disconnectObject(this);
             this._trackedWindow = null;
         }
 
@@ -924,13 +864,13 @@ export default class SynqExtension extends Extension {
 
         if (win) {
             this._trackedWindow = win;
-            this._titleConn = win.connect('notify::title', () => {
+            win.connectObject('notify::title', () => {
                 if (this._paused) return;
                 const newTitle = win.get_title() || '';
                 if (newTitle === this._currentTitle) return;
                 this._currentTitle = newTitle;
                 this._recordEvent(newTitle);
-            });
+            }, this);
         }
 
         this._recordEvent(title);
@@ -946,9 +886,10 @@ export default class SynqExtension extends Extension {
         const event = { title, ts };
         this._events.push(event);
         this._appendEventToDisk(event);
-        if (this._dbusImpl) {
+        if (this._dbusExport) {
             const iso = new Date(ts * 1000).toISOString();
-            this._dbusImpl.emitWindowChanged(title, iso);
+            this._dbusExport.emit_signal('WindowChanged',
+                new GLib.Variant('(ss)', [title, iso]));
         }
         if (this._indicator) this._indicator._updatePanelLabel();
     }
@@ -967,9 +908,8 @@ export default class SynqExtension extends Extension {
         this._paused = shouldPause;
 
         if (shouldPause) {
-            if (this._titleConn && this._trackedWindow) {
-                this._trackedWindow.disconnect(this._titleConn);
-                this._titleConn = null;
+            if (this._trackedWindow) {
+                this._trackedWindow.disconnectObject(this);
                 this._trackedWindow = null;
             }
             this._recordEvent(IDLE_SENTINEL);
@@ -1028,17 +968,14 @@ export default class SynqExtension extends Extension {
     // input:  onDone (function|undefined) called when load finishes or file missing
     // output: none (populates this._events)
     _loadEvents(onDone) {
-        const done = () => {
-            if (typeof onDone === 'function')
-                onDone();
-        };
+        const done = () => { if (typeof onDone === 'function') onDone(); };
         const file = Gio.File.new_for_path(DATA_FILE);
         if (!file.query_exists(null)) {
             this._events = [];
             done();
             return;
         }
-        file.load_contents_async(GLib.PRIORITY_DEFAULT, null, (f, res) => {
+        file.load_contents_async(null, (f, res) => {
             try {
                 const [, bytes] = f.load_contents_finish(res);
                 const text = new TextDecoder().decode(bytes);
@@ -1080,22 +1017,27 @@ export default class SynqExtension extends Extension {
         }
     }
 
-    // registers the DBus service on the session bus.
+    // DBus method: returns all events since since_unix as a JSON string.
+    GetEvents(since_unix) {
+        return JSON.stringify(this.getEventsSince(since_unix));
+    }
+
+    // DBus method: returns the title of the currently focused window.
+    GetCurrentWindow() {
+        return this.getCurrentTitle() || '';
+    }
+
+    // registers the DBus service on the session bus, using this extension
+    // object directly as the D-Bus implementation.
     // input:  none
     // output: none
     _registerDBus() {
-        this._dbusImpl = new SynqDBusImpl(
-            since => this.getEventsSince(since),
-            ()    => this.getCurrentTitle()
-        );
-
+        this._dbusExport = Gio.DBusExportedObject.wrapJSObject(DBUS_IFACE, this);
         this._nameId = Gio.bus_own_name(
             Gio.BusType.SESSION,
             DBUS_NAME,
             Gio.BusNameOwnerFlags.NONE,
-            (conn) => {
-                this._dbusImpl.export(conn);
-            },
+            (conn) => { this._dbusExport.export(conn, DBUS_PATH); },
             null,
             () => console.error('[ERROR] synq: could not own DBus name')
         );
