@@ -135,7 +135,7 @@ function computeStats(events) {
     for (let i = 0; i < events.length - 1; i++) {
         if (events[i].title === IDLE_SENTINEL) continue; // away gap, not a session
         const dur = events[i + 1].ts - events[i].ts;
-        if (dur <= 0) continue;
+        if (dur <= 0 || dur > 7200) continue; // skip gaps > 2h (crash / unclean shutdown fallback)
         const [app, activity] = parseTitle(events[i].title);
         sessions.push({ app, activity, secs: dur, ts: events[i].ts });
     }
@@ -857,6 +857,11 @@ export default class SynqExtension extends Extension {
     }
 
     disable() {
+        // close the open session at shutdown so the gap is not counted as activity
+        if (!this._paused) {
+            const ts = Math.floor(Date.now() / 1000);
+            this._appendEventToDisk({ title: IDLE_SENTINEL, ts });
+        }
         if (this._panelTimerId) {
             GLib.source_remove(this._panelTimerId);
             this._panelTimerId = 0;
